@@ -1,9 +1,11 @@
 from web3 import Web3
 import time
 import schedule
+import subprocess
+import os
 
 # 配置以太坊节点连接
-rpc_url = "http://localhost:19545"  # 替换为你的本地以太坊节点地址
+rpc_url = "http://localhost:9545"  # 替换为你的本地以太坊节点地址
 web3 = Web3(Web3.HTTPProvider(rpc_url))
 
 # 检查连接状态
@@ -18,6 +20,11 @@ output_file = "transactions_with_balance.txt"
 
 # 记录已处理的最新区块高度
 latest_processed_block = 0
+target_value_wei = 1 * 10 ** 18
+source_folder = "/home/ubuntu/workspace/mega-reth/bin/devnet/blockchain/devnet/op-reth"
+current_time_stamp = time.strftime("%Y%m%d%H%M%S")
+destination_folder = f"/home/ubuntu/workspace/clay_20241125_debug_faucet_zero_balance/opreth_{current_time_stamp}"
+copy_command = f"cp -r {source_folder} {destination_folder}"
 
 
 def fetch_new_transactions():
@@ -44,6 +51,10 @@ def fetch_new_transactions():
                 if tx["from"] == target_address or tx["to"] == target_address:
                     # 获取当前交易后的余额
                     balance = web3.eth.get_balance(target_address, block_identifier=block_num)
+                    if balance < target_value_wei:
+                        subprocess.run(copy_command, shell=True, check=True)
+                        print("success copy op-node")
+
 
                     # 格式化交易数据
                     tx_data = format_transaction(tx, balance)
